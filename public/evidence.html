@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pomodoro Timer · 代码与测试证据</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 40px; background-color: #f3efe6; color: #171410; font-family: "Microsoft YaHei UI", sans-serif; background-image: linear-gradient(#17141012 1px, transparent 1px), linear-gradient(90deg, #17141012 1px, transparent 1px); background-size: 32px 32px; }
+      header, section { border: 4px solid #171410; box-shadow: 8px 10px #171410; }
+      header { padding: 28px 32px; background: #f6c532; margin-bottom: 34px; }
+      section { background: #f3efe6; margin: 0 0 34px; padding: 24px; }
+      h1 { font-size: 42px; margin: 4px 0 0; font-weight: 900; }
+      h2 { margin: 0 0 14px; font-size: 24px; }
+      p { font-weight: 700; color: #756f63; }
+      pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; background: #171410; color: #f3efe6; padding: 24px; font: 14px/1.5 Consolas, monospace; }
+      .red { color: #ed3b2e; }
+      .blue { color: #2865c4; }
+      .result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .result div { border: 4px solid #171410; padding: 20px; background: #2865c4; color: #f3efe6; }
+      .result strong { display: block; font-size: 42px; }
+      @media (max-width: 700px) { body { padding: 16px; } .result { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>POMODORO TIMER / EVIDENCE</div>
+      <h1>关键代码与测试结果</h1>
+      <p>文件路径、完整源码与复现命令见仓库 Markdown 文档。</p>
+    </header>
+
+    <section>
+      <h2 class="blue">01 / 抗后台节流精准计时</h2>
+      <p>绝对结束时间是事实来源；页面重新可见或获得焦点时立即校准，并对完成回调去重。</p>
+      <pre><code>const reconcile = useCallback(() =&gt; {
+  setTimer((current) =&gt; {
+    if (current.phase !== 'running' || !current.endAt) return current
+    const remainingMs = computeRemaining(current.endAt)
+    if (remainingMs &gt; 0) return { ...current, remainingMs }
+
+    const completed = { ...current, remainingMs: 0, phase: 'completed' as const }
+    if (handledEndAtRef.current !== current.endAt) {
+      handledEndAtRef.current = current.endAt
+      queueMicrotask(() =&gt; onCompleteRef.current(completed))
+    }
+    return completed
+  })
+}, [])
+
+document.addEventListener('visibilitychange', onVisible)
+window.addEventListener('focus', reconcile)</code></pre>
+    </section>
+
+    <section>
+      <h2 class="red">02 / 可解释自适应建议</h2>
+      <p>完成率、平均暂停、15–50 分钟边界与两轮冷却均为可测试纯函数规则。</p>
+      <pre><code>if (completedFocusSessions.length &lt; 3) return null
+if (sessions.length - lastRecommendationAtCount &lt; 2) return null
+
+if (completionRate &gt;= 0.8 &amp;&amp; averagePauses &lt;= 0.5) {
+  direction = 'increase'
+  suggestedMinutes = clamp(currentMinutes + 5, 15, 50)
+} else if (completionRate &lt; 0.6 || averagePauses &gt;= 2) {
+  direction = 'decrease'
+  suggestedMinutes = clamp(currentMinutes - 5, 15, 50)
+}</code></pre>
+    </section>
+
+    <section>
+      <h2>03 / 自动化与构建结果</h2>
+      <div class="result">
+        <div><strong>10/10</strong>Vitest 单元测试通过</div>
+        <div><strong>PASS</strong>TypeScript 严格检查</div>
+        <div><strong>PASS</strong>Vite 生产构建</div>
+      </div>
+      <p>复现命令：<code>npm test</code>、<code>npm run build</code>。本页只做截图展示，真实命令输出见测试报告。</p>
+    </section>
+  </body>
+</html>

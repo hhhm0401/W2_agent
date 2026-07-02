@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.vite/
+*.log
+.DS_Store
+Thumbs.db
+docs/latex/build/
+delivery/*.zip
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+docs/latex/main.tex
+docs/番茄钟项目说明文档.pdf
